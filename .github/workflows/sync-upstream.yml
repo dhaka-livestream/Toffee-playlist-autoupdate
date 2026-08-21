@@ -1,1 +1,45 @@
+# ওয়ার্কফ্লোর নাম
+name: 'Sync Upstream'
 
+# ট্রিগার: কখন এই ওয়ার্কফ্লো চালু হবে
+on:
+  # ১. নির্ধারিত সময়ে: প্রতিদিন নির্দিষ্ট সময়ে চালানোর জন্য (এখানে প্রতিদিন দুপুর ১২টায় সেট করা আছে)
+  schedule:
+    - cron: '0 12 * * *'  # আপনি চাইলে সময় পরিবর্তন করতে পারেন
+  # ২. ম্যানুয়ালি: আপনি চাইলে Actions ট্যাব থেকে হাতেও চালাতে পারেন
+  workflow_dispatch:
+
+# কাজ (Jobs) যা 실행 হবে
+jobs:
+  sync_latest_from_upstream:
+    # এই কাজটি চালানোর জন্য ব্যবহৃত ভার্চুয়াল পরিবেশ
+    runs-on: ubuntu-latest
+    # কাজের নাম
+    name: Sync latest commits from upstream repo
+
+    steps:
+      # ধাপ ১: আপনার ফর্কের কোড চেকআউট (ডাউনলোড) করা
+      - name: Checkout target repo (your fork)
+        uses: actions/checkout@v4
+        with:
+          # আপনার ফর্কের যে ব্রাঞ্চটি আপডেট করতে চান (সাধারণত main)
+          ref: main
+          # আপনার ফর্কে পুশ করার জন্য টোকেন সেট করা
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ধাপ ২: মূল রিপোজিটরি (upstream) কে রিমোট হিসেবে যোগ করা
+      - name: Add upstream repo
+        run: |
+          git remote add upstream https://github.com/abusaeeidx/Toffee-playlist.git
+          git fetch upstream
+
+      # ধাপ ৩: মূল রিপোজিটরির পরিবর্তনগুলো আপনার ব্রাঞ্চে মার্জ করা
+      - name: Merge upstream changes
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit
+
+      # ধাপ ৪: আপডেট করা পরিবর্তনগুলো আপনার ফর্কে পুশ করা
+      - name: Push changes to your fork
+        run: |
+          git push origin main
